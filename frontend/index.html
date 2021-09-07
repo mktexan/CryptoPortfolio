@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="./counter.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Titillium+Web:wght@200&family=Zilla+Slab:wght@300&display=swap"
+        rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-BmbxuPwQa2lc/FVzBcNJ7UAyJxM6wuqIj61tLrc4wSX0szH/Ev+nYRRuWlolflfl" crossorigin="anonymous">
+    <link rel="stylesheet" href="./style.css">
+    <title>Document</title>
+</head>
+
+<body>
+    <div id="app" v-cloak>
+
+        <!-- fixed header -->
+        <header class="header-wrap">
+            <div class="header-row flex-row flex-middle flex-space">
+                <div class="if-small">
+                    <div class="form-input dark">
+                        <div class="push-right">🔎</div>
+                        <input type="text" v-model="search" placeholder="Search token..." />
+                    </div>
+                </div>
+
+                <div class="flex-row flex-middle">
+                    <i class="fas fa-plus" @click="showAddPosition = true"></i>
+                    <br>
+                    <div class="dropdown">
+                        <div class="form-input text-nowrap shadow-box">▼ {{ limit }}</div>
+                        <ul>
+                            <li @click="setLimit( 0 )"><span class="text-faded">Show:</span> All</li>
+                            <li @click="setLimit( 10 )"><span class="text-faded">Show:</span> 10</li>
+                            <li @click="setLimit( 20 )"><span class="text-faded">Show:</span> 20</li>
+                            <li @click="setLimit( 50 )"><span class="text-faded">Show:</span> 50</li>
+                            <li @click="setLimit( 100 )"><span class="text-faded">Show:</span> 100</li>
+                        </ul>
+                    </div>
+                    <div class="dropdown">
+                        <div class="form-input text-nowrap shadow-box">▼ {{ sortLabel }}</div>
+                        <ul>
+                            <li @click="sortBy( 'token', 'asc' )"><span class="text-faded">Sort:</span> Token</li>
+                            <li @click="sortBy( 'close', 'desc' )"><span class="text-faded">Sort:</span> Price</li>
+                            <li @click="sortBy( 'assetVolume', 'desc' )"><span class="text-faded">Sort:</span> Volume
+                            </li>
+                            <li @click="sortBy( 'percent', 'desc' )"><span class="text-faded">Sort:</span> Percent</li>
+                            <li @click="sortBy( 'change', 'desc' )"><span class="text-faded">Sort:</span> Change</li>
+                            <li @click="sortBy( 'trades', 'desc' )"><span class="text-faded">Sort:</span> Trades</li>
+                        </ul>
+                    </div>
+                    <div class="dropdown">
+                        <div class="form-input text-nowrap shadow-box">▼ {{ asset }}</div>
+                        <ul>
+                            <li @click="filterAsset( 'BTC' )"><span class="text-faded">Asset:</span> BTC</li>
+                            <li @click="filterAsset( 'ETH' )"><span class="text-faded">Asset:</span> ETH</li>
+                            <li @click="filterAsset( 'BNB' )"><span class="text-faded">Asset:</span> BNB</li>
+                            <li @click="filterAsset( 'USDT' )"><span class="text-faded">Asset:</span> USDT</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- price list grid -->
+        <main class="main-wrap" v-if="!showAddPosition">
+            <div class="main-grid-item"
+                style="display: flex; justify-content: center; flex-direction: column; align-items:center;margin-bottom: 40px;">
+                <h1>Portfolio Value</h1>
+                <div style="color:#0db577; font-size: 3rem; margin-top: 15px;">{{portfolioValue}}</div>
+            </div>
+            <div class="main-grid-list">
+                <div class="main-grid-item" v-for="c in coinsList" :key="c.symbol" :class="c.style"
+                    style="position: relative;">
+                    <div class="main-grid-info flex-row flex-top flex-stretch">
+                        <div class="push-right">
+                            <img :src="c.icon" :alt="c.pair" />
+                        </div>
+                        <div class="flex-1 shadow-text">
+                            <div class="flex-row flex-top flex-space">
+                                <div class="text-left text-clip push-right">
+                                    <h1 class="text-primary text-clip">{{ c.token }}<small
+                                            class="text-faded text-small text-condense">/{{ c.asset }}</small></h1>
+                                    <h2 class="text-bright text-clip">{{ c.close | toFixed( asset ) }}</h2>
+                                    <h2 class="text-bright text-clip">Val: {{ formatMoney(convertToSum(c.count, c.close)) }}</h2>
+                                    <h2 class="text-bright text-clip" :class="{ gain: isGain(c.count, c.avgCost, c.close), 'loss': !isGain(c.count, c.avgCost, c.close)}">P/L: {{ formatMoney(gainLossTotal(c.count, c.avgCost, c.close)) }}</h2>
+                                </div>
+                                <div class="text-right" style="
+                                position: absolute;
+                                right: 5px;
+                            ">
+                                    <div class="color text-big text-clip">{{ c.arrow }} {{ c.sign }}{{ c.percent |
+                                        toFixed( 2 ) }}%</div>
+                                    <div class="text-clip">{{ c.sign }}{{ c.change | toFixed( asset ) }} <small
+                                            class="text-faded">24h</small></div>
+                                    <div class="text-clip">{{ c.assetVolume | toMoney }} <small
+                                            class="text-faded">Vol</small></div>
+                                            <div class="text-clip">{{formatNumber(c.count)}} <small
+                                                class="text-faded">{{c.token}}</small></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="main-grid-chart">
+                        <linechart :width="600" :height="40" :values="c.history"></linechart>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <div class="main-grid-item" style="display: flex; justify-content: center;   position: absolute; top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);" v-if="showAddPosition">
+            <div class="card text-white bg-primary mb-3" style="">
+                <div class="card-header">Position</div>
+                <div class="card-body">
+                    <h5 class="card-title">Add A Position</h5>
+                    <br>
+                    <div class="mb-3">
+                        <label for="symbol" class="form-label">Symbol</label>
+                        <input type="text" class="form-control" id="symbol" aria-describedby="emailHelp"
+                            v-model="newSymbol">
+                    </div>
+                    <div class="mb-3">
+                        <label for="position" class="form-label">Position</label>
+                        <input type="number" class="form-control" id="position" value=0 v-model="newPosition">
+                    </div>
+                    <div class="mb-3">
+                        <label for="avgCost" class="form-label">Avg Cost</label>
+                        <input type="number" class="form-control" id="avgCost" value=0 v-model="newAvgCost">
+                    </div>
+                    <button type="submit" class="btn btn-primary" @click="addPosition()">Submit</button>
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- socket loader -->
+        <div class="loader-wrap" :class="{ 'visible': loaderVisible }">
+            <div class="loader-content">
+                <div v-if="status === 0"><i>📡</i> <br /> Connecting to Socket API ...</div>
+                <div v-else-if="status === 1"><i>💬</i> <br /> Waiting for data from Socket API ...</div>
+                <div v-else-if="status === 2"><i>😃</i> <br /> Connected to the Socket API</div>
+                <div v-else-if="status === -1"><i>😡</i> <br /> Error connecting to the Socket API</div>
+            </div>
+        </div>
+
+    </div>
+</body>
+<script src="./countUp.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.5.17/vue.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-b5kHyXgcpbZJO/tY9Ul7kGkf1S0CWuKcCD38l8YkeH8z8QjE0GmW1gYU5S9FOnJ0"
+    crossorigin="anonymous"></script>
+<script src="./index.js"></script>
+
+</html>

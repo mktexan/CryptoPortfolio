@@ -1,0 +1,25 @@
+{
+  "name": "portfolio-tracker",
+  "version": "1.0.0",
+  "description": "Track crypto prices for portfolio",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "author": "Cole Stasney",
+  "license": "ISC",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "crypto-price-monitor": "^1.0.0",
+    "dotenv": "^10.0.0",
+    "express": "^4.17.1",
+    "http": "^0.0.1-security",
+    "i": "^0.3.6",
+    "mongoose": "^6.0.4",
+    "morgan": "^1.10.0",
+    "ngrok": "^4.2.2",
+    "npm": "^7.22.0",
+    "socket.io": "^4.2.0"
+  }
+}
