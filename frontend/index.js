@@ -1,3 +1,11 @@
+window.odometerOptions = {
+    duration: 100, // Change how long the javascript expects the CSS animation to take
+
+}
+
+console.log('setting options')
+
+
 // common number filters
 Vue.filter('toFixed', (num, asset) => {
     if (typeof asset === 'number') return Number(num).toFixed(asset);
@@ -181,7 +189,7 @@ new Vue({
 
             const data = _.map(this.positions, data => {
                 const symbol = `${data.ticker.toUpperCase()}USDT`
-                const item = _.find(list, d => d.s === symbol)
+                let item = _.find(list, d => d.s === symbol)
 
                 item ? item.name = data.ticker.toUpperCase() : ''
 
@@ -212,7 +220,8 @@ new Vue({
                 counter += total
             })
 
-            this.portfolioValue = this.formatMoney(counter.toFixed(2))
+            // this.portfolioValue = this.formatMoney(counter.toFixed(2))
+            $('.odometer').html(counter.toFixed(0))
         },
 
         // start socket connection

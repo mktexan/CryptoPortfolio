@@ -5,16 +5,16 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="./counter.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Titillium+Web:wght@200&family=Zilla+Slab:wght@300&display=swap"
         rel="stylesheet">
+        <link rel="stylesheet" href="./odometer.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.0/css/all.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/css/bootstrap.min.css" rel="stylesheet"
         integrity="sha384-BmbxuPwQa2lc/FVzBcNJ7UAyJxM6wuqIj61tLrc4wSX0szH/Ev+nYRRuWlolflfl" crossorigin="anonymous">
     <link rel="stylesheet" href="./style.css">
-    <title>Document</title>
+    <title>Crypto Assets</title>
 </head>
 
 <body>
@@ -29,7 +29,7 @@
                         <input type="text" v-model="search" placeholder="Search token..." />
                     </div>
                 </div>
-
+                <!-- <h1 style="margin-left: 15px;">Portfolio Value</h1> -->
                 <div class="flex-row flex-middle">
                     <i class="fas fa-plus" @click="showAddPosition = true"></i>
                     <br>
@@ -71,9 +71,9 @@
         <!-- price list grid -->
         <main class="main-wrap" v-if="!showAddPosition">
             <div class="main-grid-item"
-                style="display: flex; justify-content: center; flex-direction: column; align-items:center;margin-bottom: 40px;">
+                style="display: flex; justify-content: center; flex-direction: column; align-items:center;margin-bottom: 15px;">
                 <h1>Portfolio Value</h1>
-                <div style="color:#0db577; font-size: 3rem; margin-top: 15px;">{{portfolioValue}}</div>
+                <div style="color:#0db577; font-size: 3rem; font-size: 3rem; display: flex;"><h1>$</h1><h1 class="odometer"></h1></div>
             </div>
             <div class="main-grid-list">
                 <div class="main-grid-item" v-for="c in coinsList" :key="c.symbol" :class="c.style"
@@ -88,8 +88,11 @@
                                     <h1 class="text-primary text-clip">{{ c.token }}<small
                                             class="text-faded text-small text-condense">/{{ c.asset }}</small></h1>
                                     <h2 class="text-bright text-clip">{{ c.close | toFixed( asset ) }}</h2>
-                                    <h2 class="text-bright text-clip">Val: {{ formatMoney(convertToSum(c.count, c.close)) }}</h2>
-                                    <h2 class="text-bright text-clip" :class="{ gain: isGain(c.count, c.avgCost, c.close), 'loss': !isGain(c.count, c.avgCost, c.close)}">P/L: {{ formatMoney(gainLossTotal(c.count, c.avgCost, c.close)) }}</h2>
+                                    <h2 class="text-bright text-clip">Val: {{ formatMoney(convertToSum(c.count,
+                                        c.close)) }}</h2>
+                                    <h2 class="text-bright text-clip"
+                                        :class="{ gain: isGain(c.count, c.avgCost, c.close), 'loss': !isGain(c.count, c.avgCost, c.close)}">
+                                        P/L: {{ formatMoney(gainLossTotal(c.count, c.avgCost, c.close)) }}</h2>
                                 </div>
                                 <div class="text-right" style="
                                 position: absolute;
@@ -101,8 +104,8 @@
                                             class="text-faded">24h</small></div>
                                     <div class="text-clip">{{ c.assetVolume | toMoney }} <small
                                             class="text-faded">Vol</small></div>
-                                            <div class="text-clip">{{formatNumber(c.count)}} <small
-                                                class="text-faded">{{c.token}}</small></div>
+                                    <div class="text-clip">{{formatNumber(c.count)}} <small
+                                            class="text-faded">{{c.token}}</small></div>
                                 </div>
                             </div>
                         </div>
@@ -154,7 +157,9 @@
 
     </div>
 </body>
-<script src="./countUp.js"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"
+    integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+<script src="odometer.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.5.17/vue.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/js/bootstrap.bundle.min.js"

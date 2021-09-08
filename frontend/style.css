@@ -361,7 +361,7 @@ input, button, select, option, textarea {
 }
 @media only screen and (min-width : 420px) {
     .main-wrap .main-grid-list {
-        grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(406px, 1fr));
    }
 }
 .main-wrap .main-grid-list .main-grid-item {
