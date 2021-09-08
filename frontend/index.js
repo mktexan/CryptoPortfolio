@@ -1,9 +1,6 @@
 window.odometerOptions = {
-    duration: 100, // Change how long the javascript expects the CSS animation to take
-
+    duration: 100, 
 }
-
-console.log('setting options')
 
 
 // common number filters
@@ -95,7 +92,9 @@ new Vue({
         newSymbol: '',
         newPosition: 0,
         newAvgCost: 0,
-        portfolioValue: 0
+        portfolioValue: 0,
+        showSignUpSignIn: false,
+        hasPositions: false
     },
 
     // computed methods
@@ -265,25 +264,25 @@ new Vue({
 
         // finalize data for each coin from socket
         getCoinData(item) {
-            let reg = /^([A-Z]+)(BTC|ETH|BNB|USDT|TUSD)$/;
-            let symbol = String(item.s).replace(/[^\w\-]+/g, '').toUpperCase();
-            let token = symbol.replace(reg, '$1');
-            let asset = symbol.replace(reg, '$2');
-            let name = token;
-            let pair = token + '/' + asset;
-            let icon = this.iconbase + token.toLowerCase() + '_.png';
-            let open = parseFloat(item.o);
-            let high = parseFloat(item.h);
-            let low = parseFloat(item.l);
-            let close = parseFloat(item.c);
-            let change = parseFloat(item.p);
-            let percent = parseFloat(item.P);
-            let trades = parseInt(item.n);
-            let tokenVolume = Math.round(item.v);
-            let assetVolume = Math.round(item.q);
-            let sign = (percent >= 0) ? '+' : '';
-            let arrow = (percent >= 0) ? '▲' : '▼';
-            let info = [pair, close.toFixed(8), '(', arrow, sign + percent.toFixed(2) + '%', '|', sign + change.toFixed(8), ')'].join(' ');
+            const reg = /^([A-Z]+)(BTC|ETH|BNB|USDT|TUSD)$/;
+            const symbol = String(item.s).replace(/[^\w\-]+/g, '').toUpperCase();
+            const token = symbol.replace(reg, '$1');
+            const asset = symbol.replace(reg, '$2');
+            const name = token;
+            const pair = token + '/' + asset;
+            const icon = this.iconbase + token.toLowerCase() + '_.png';
+            const open = parseFloat(item.o);
+            const high = parseFloat(item.h);
+            const low = parseFloat(item.l);
+            const close = parseFloat(item.c);
+            const change = parseFloat(item.p);
+            const percent = parseFloat(item.P);
+            const trades = parseInt(item.n);
+            const tokenVolume = Math.round(item.v);
+            const assetVolume = Math.round(item.q);
+            const sign = (percent >= 0) ? '+' : '';
+            const arrow = (percent >= 0) ? '▲' : '▼';
+            const info = [pair, close.toFixed(8), '(', arrow, sign + percent.toFixed(2) + '%', '|', sign + change.toFixed(8), ')'].join(' ');
             let style = '';
 
             const avgCost = _.find(this.positions, x => x.ticker.toLowerCase() === item.name.toLowerCase()) ? _.find(this.positions, x => x.ticker.toLowerCase() === item.name.toLowerCase()).averageCost : 0
@@ -322,16 +321,32 @@ new Vue({
             fetch('/account/getPositions')
                 .then(response => response.json())
                 .then(data => this.handlePositions(data))
-                .catch(err => console.error(err))
+                .catch(err => this.handleNotfound(err))
+        },
+
+        handleNotfound(err) {
+            this.status = 2
         },
 
         handlePositions(data) {
             this.status = 0
 
-            if (data.length === 0) return this.showAddPosition = true
+            if (data.positions === null) {
+                this.showAddPosition = true
+                this.status = 2
+
+                return
+            }
+
+            if (data.length === 0) {
+                this.status = 2
+                return this.showAddPosition = true
+            }
             else this.showAddPosition = false
 
             this.positions = data
+
+            this.hasPositions = true
 
             this.sockInit()
         },
@@ -351,6 +366,61 @@ new Vue({
 
                     this.getPositions()
                 })
+        },
+
+        authCheck() {
+            fetch('/user/authCheck', {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json', credentials: 'include' }
+            })
+                .then((res) => {
+                    if (res.status === 401) {
+                        this.showSignUpSignIn = true
+                        this.status = 2
+                    }
+
+                    else this.getPositions()
+                })
+        },
+
+        deletePosition(ticker) {
+            Swal.fire({
+                title: 'Delete Position?',
+                text: "You won't be able to revert this!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes, delete it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    fetch('/account/deletePosition', {
+                        method: 'DELETE',
+                        headers: { 'Content-Type': 'application/json', credentials: 'include' },
+                        body: JSON.stringify({
+                            ticker: ticker.toLowerCase(),
+                        }),
+                    })
+                        .then((res) => {
+                            if (res.status === 401) {
+                                this.showSignUpSignIn = true
+                                this.status = 2
+                            }
+
+                            else {
+                                location.href='/'
+                            }
+                        })
+                }
+            })
+        },
+
+        login() {
+            return location.href = '/auth/google'
+        },
+
+        signOut() {
+            location.href='/auth/signout'
         },
 
         removePosition() {
@@ -383,13 +453,31 @@ new Vue({
             const cost = count * avgCost
 
             return Math.sign(currentPrice - cost) === 1 ? true : false
+        },
+
+        setSignUpButtons() {
+            const signUpButton = document.getElementById('signUp')
+            const signInButton = document.getElementById('signIn')
+            const container = document.getElementById('container')
+
+            signUpButton.addEventListener('click', () => {
+                container.classList.add("right-panel-active")
+            })
+
+            signInButton.addEventListener('click', () => {
+                container.classList.remove("right-panel-active")
+            })
+        },
+
+        closeAddPosition() {
+            this.showAddPosition = false
         }
     },
 
     // app mounted
     mounted() {
-        this.portfolioValue = 0
-        this.getPositions()
+        this.setSignUpButtons()
+        this.authCheck()
     },
 
     // app destroyed
