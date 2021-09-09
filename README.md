@@ -8,10 +8,10 @@ A small project to track a crypto portfolio across multiple exchanges and wallet
 
 Create a mongo database instance and connect in a .env file.
 
-Use the Google dev console to crate a project and credentials for sign in and place in .env file.
+Use the Google dev console to create a project and credentials for sign in and place in .env file.
 
 ```
-mongoConnectionStringMlab=xxxxxxxx
+mongoConnectionString=xxxxxxxx
 clientID=xxxxxxxx
 clientSecret=xxxxxxxx
 sessionSecret=xxxxxxxxx
