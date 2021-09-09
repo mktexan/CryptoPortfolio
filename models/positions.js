@@ -1,6 +1,6 @@
 const mongoose = require('mongoose')
 
-var positionModel = mongoose.Schema({
+const positionModel = mongoose.Schema({
     ticker: String,
     count: Number,
     averageCost: Number,

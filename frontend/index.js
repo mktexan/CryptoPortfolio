@@ -1,5 +1,5 @@
 window.odometerOptions = {
-    duration: 100, 
+    auto: false, // Don't automatically initialize everything with class 'odometer'
 }
 
 

@@ -40,8 +40,8 @@ app.use(expressSession)
 app.use(passport.initialize())
 app.use(passport.session())
 
-app.use('/priceApi', priceApi)
-app.use('/account', account)
+app.use('/priceApi', priceApi, requireUser)
+app.use('/account', account, requireUser)
 app.use('/user', user)
 app.use('/auth', auth)
 

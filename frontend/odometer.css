@@ -1,5 +1,6 @@
 .odometer.odometer-auto-theme, .odometer.odometer-theme-default {
     display: inline-block;
+    font-size: 30px;
     vertical-align: middle;
     *vertical-align: auto;
     *zoom: 1;
