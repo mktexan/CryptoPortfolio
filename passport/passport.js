@@ -24,7 +24,7 @@ module.exports = (passport) => {
                 if (err) console.log(err)
                 if (user) return done(null, user)
 
-               let userModel = new UserModel({
+                let userModel = new UserModel({
                     first_name: profile.name.givenName,
                     last_name: profile.name.familyName,
                     email: profile.emails[0].value,

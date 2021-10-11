@@ -20,8 +20,22 @@ const deletePosition = async (ticker, user) => {
     return positions
 }
 
+const setPriceTarget = async (target, ticker, user) => {
+    await dbService.setPriceTarget(target, ticker, user)
+
+    return
+}
+
+const removePriceTarget = async (target, ticker, user) => {
+    await dbService.removePriceTarget(target, ticker, user)
+
+    return
+}
+
 module.exports = {
     getPositions,
     addPosition,
-    deletePosition
+    deletePosition,
+    setPriceTarget,
+    removePriceTarget
 }

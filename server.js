@@ -3,13 +3,12 @@ const port = 7020
 const express = require('express')
 const cors = require('cors')
 const morgan = require('morgan')
-const cookieParser = require('cookie-parser')
 const app = express()
 const passport = require('passport')
 const session = require('express-session')
 const server = require('http').createServer(app)
 
-const requireUser = require('./helper-functions').requireUser
+const requireUser = require('./helper-functions').requireUser 
 
 require('./passport/passport')(passport)
 
@@ -29,7 +28,6 @@ dbService.connectToMongoDb()
 const expressSession = session({
     resave: true, saveUninitialized: true, secret: process.env.passportSecret, cookie: { maxAge: 36000000 }, key: 'connect.sid'
 })
-
 
 app.use(morgan('dev'))
 app.use(express.static('frontend'))

@@ -31,4 +31,26 @@ app.delete('/deletePosition', (req, res) => {
         .catch(_ => res.sendStatus(404))
 })
 
+app.post('/setPriceTarget', (req, res) => {
+    const target = Number(req.body.target)
+    const ticker = req.body.ticker
+    const user = req.user.email
+
+    accountcontroller.setPriceTarget(target, ticker, user)
+        .then(_ => res.sendStatus(200))
+        .catch(_ => res.sendStatus(404))
+})
+
+app.delete('/removePriceTarget', (req, res) => {
+    const target = Number(req.body.target)
+    const ticker = req.body.ticker
+    const user = req.user.email
+
+    accountcontroller.removePriceTarget(target, ticker, user)
+        .then(_ => res.sendStatus(200))
+        .catch(_ => res.sendStatus(404))
+})
+
+
+
 module.exports = app

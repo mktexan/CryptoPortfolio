@@ -3,70 +3,6 @@ window.odometerOptions = {
 }
 
 
-// common number filters
-Vue.filter('toFixed', (num, asset) => {
-    if (typeof asset === 'number') return Number(num).toFixed(asset);
-    return Number(num).toFixed((asset === 'USDT') ? 3 : 8);
-})
-
-Vue.filter('toMoney', num => {
-    return Number(num).toFixed(0).replace(/./g, (c, i, a) => {
-        return i && c !== "." && ((a.length - i) % 3 === 0) ? ',' + c : c;
-    })
-})
-
-// component for creating line chart
-Vue.component('linechart', {
-    props: {
-        width: { type: Number, default: 400, required: true },
-        height: { type: Number, default: 40, required: true },
-        values: { type: Array, default: [], required: true },
-    },
-    data() {
-        return { cx: 0, cy: 0 };
-    },
-    computed: {
-        viewBox() {
-            return '0 0 ' + this.width + ' ' + this.height;
-        },
-        chartPoints() {
-            let data = this.getPoints();
-            let last = data.length ? data[data.length - 1] : { x: 0, y: 0 };
-            let list = data.map(d => (d.x - 10) + ',' + d.y);
-            this.cx = last.x - 5;
-            this.cy = last.y;
-            return list.join(' ');
-        },
-    },
-    methods: {
-        getPoints() {
-            this.width = parseFloat(this.width) || 0;
-            this.height = parseFloat(this.height) || 0;
-            let min = this.values.reduce((min, val) => val < min ? val : min, this.values[0]);
-            let max = this.values.reduce((max, val) => val > max ? val : max, this.values[0]);
-            let len = this.values.length;
-            let half = this.height / 2;
-            let range = (max > min) ? (max - min) : this.height;
-            let gap = (len > 1) ? (this.width / (len - 1)) : 1;
-            let points = [];
-
-            for (let i = 0; i < len; ++i) {
-                let d = this.values[i];
-                let val = 2 * ((d - min) / range - 0.5);
-                let x = i * gap;
-                let y = -val * half * 0.8 + half;
-                points.push({ x, y });
-            }
-            return points;
-        }
-    },
-    template: `
-    <svg :viewBox="viewBox" xmlns="http://www.w3.org/2000/svg">
-      <polyline class="color" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" :points="chartPoints" />
-      <circle class="color" :cx="cx" :cy="cy" r="4" fill="#fff" stroke="none" />
-    </svg>`,
-})
-
 // vue instance
 new Vue({
     // mount point
@@ -94,7 +30,10 @@ new Vue({
         newAvgCost: 0,
         portfolioValue: 0,
         showSignUpSignIn: false,
-        hasPositions: false
+        hasPositions: false,
+        target1: 5,
+        target2: 10,
+        target3: 30
     },
 
     // computed methods
@@ -270,7 +209,7 @@ new Vue({
             const asset = symbol.replace(reg, '$2');
             const name = token;
             const pair = token + '/' + asset;
-            const icon = this.iconbase + token.toLowerCase() + '_.png';
+            let icon = this.iconbase + token.toLowerCase() + '_.png';
             const open = parseFloat(item.o);
             const high = parseFloat(item.h);
             const low = parseFloat(item.l);
@@ -285,13 +224,16 @@ new Vue({
             const info = [pair, close.toFixed(8), '(', arrow, sign + percent.toFixed(2) + '%', '|', sign + change.toFixed(8), ')'].join(' ');
             let style = '';
 
+            if (token.toLowerCase() === 'hbar') icon = './hbar.png'
+
             const avgCost = _.find(this.positions, x => x.ticker.toLowerCase() === item.name.toLowerCase()) ? _.find(this.positions, x => x.ticker.toLowerCase() === item.name.toLowerCase()).averageCost : 0
             const count = _.find(this.positions, x => x.ticker.toLowerCase() === item.name.toLowerCase()) ? _.find(this.positions, x => x.ticker.toLowerCase() === item.name.toLowerCase()).count : 0
+            const targets = _.find(this.positions, x => x.ticker.toLowerCase() === item.name.toLowerCase()) ? _.find(this.positions, x => x.ticker.toLowerCase() === item.name.toLowerCase()).targets.sort((a, b) => a - b) : []
 
             if (percent > 0) style = 'gain'
             if (percent < 0) style = 'loss'
 
-            return { symbol, token, asset, name, pair, icon, open, high, low, close, change, percent, trades, tokenVolume, assetVolume, sign, arrow, style, info, avgCost, count };
+            return { symbol, token, asset, name, pair, icon, open, high, low, close, change, percent, trades, tokenVolume, assetVolume, sign, arrow, style, info, avgCost, count, targets };
         },
 
         // sort an array by key and order
@@ -364,7 +306,7 @@ new Vue({
                 .then((res) => {
                     if (res.status !== 200) return
 
-                    this.getPositions()
+                    this.refresh()
                 })
         },
 
@@ -408,7 +350,7 @@ new Vue({
                             }
 
                             else {
-                                location.href='/'
+                                location.href = '/'
                             }
                         })
                 }
@@ -420,7 +362,7 @@ new Vue({
         },
 
         signOut() {
-            location.href='/auth/signout'
+            location.href = '/auth/signout'
         },
 
         removePosition() {
@@ -436,7 +378,7 @@ new Vue({
         },
 
         convertToSum(count, close) {
-            return `${(count * close).toFixed(2)}`
+            return `${(count * close).toFixed(4)}`
         },
 
         gainLossTotal(count, avgCost, close) {
@@ -445,6 +387,10 @@ new Vue({
             const cost = count * avgCost
 
             return currentPrice - cost
+        },
+
+        targetPrice(count, target) {
+            return count * target
         },
 
         isGain(count, avgCost, close) {
@@ -471,6 +417,77 @@ new Vue({
 
         closeAddPosition() {
             this.showAddPosition = false
+        },
+
+        addTarget(ticker) {
+            Swal.fire({
+                title: 'Set target',
+                input: 'number',
+                showCancelButton: true,
+                confirmButtonText: 'Set Target',
+                showLoaderOnConfirm: true,
+                preConfirm: (target) => {
+                    return fetch('/account/setPriceTarget', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', credentials: 'include' },
+                        body: JSON.stringify({
+                            ticker: ticker.toLowerCase(),
+                            target: target
+                        }),
+                    })
+                        .then(response => {
+                            if (!response.ok) throw new Error(response.statusText)
+                            return
+                        })
+                        .catch(error => {
+                            Swal.showValidationMessage(`Request failed: ${error}`)
+                        })
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({
+                        title: 'Target set!'
+                    })
+
+                    this.refresh()
+                }
+            })
+        },
+
+        removeTarget(ticker, target) {
+            console.log(ticker, target)
+            Swal.fire({
+                title: 'Remove Target?',
+                text: `The $${target} target will be removed.`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes, remove it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    fetch('/account/removePriceTarget', {
+                        method: 'DELETE',
+                        headers: { 'Content-Type': 'application/json', credentials: 'include' },
+                        body: JSON.stringify({
+                            ticker: ticker.toLowerCase(),
+                            target: target
+                        }),
+                    })
+                        .then((res) => {
+                            if (res.status === 404) return
+
+                            this.refresh()
+                        })
+                }
+            })
+        },
+
+        refresh() {
+            fetch('/account/getPositions')
+                .then(response => response.json())
+                .then(data => this.positions = data)
+                .catch(err => this.handleNotfound(err))
         }
     },
 

@@ -17,4 +17,5 @@ clientSecret=xxxxxxxx
 sessionSecret=xxxxxxxxx
 secret=xxxxxxxxxxxx
 passPortSecret=xxxxxxxxxxxx
+callbackURL=xxxxxxxxxxxxxx
 ```
